@@ -1,0 +1,72 @@
+app.use(express.static('public', { 
+  setHeaders: (res, path, stat) => {
+    if (path.endsWith('.html')) {
+      res.set('Content-Type', 'text/html');
+    }
+  }
+}));
+
+// Supprimez cette ligne, car elle est redondante :
+// app.use(express.static('public'));
+
+// Le reste de votre code reste inchangé...
+
+// Servir les fichiers statiques (cette ligne devrait être avant les routes)
+app.use(express.static('public'));
+
+// Connexion à MongoDB
+mongoose.connect('mongodb://localhost:27017/musicapp', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connecté à MongoDB'))
+  .catch(err => console.error('Erreur de connexion à MongoDB', err));
+
+// Routes pour les chansons
+app.get('/songs', async (req, res) => {
+  try {
+    const songs = await Song.find();
+    res.json(songs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/songs', async (req, res) => {
+  const song = new Song({
+    title: req.body.title,
+    artist: req.body.artist,
+    duration: req.body.duration
+  });
+  try {
+    const newSong = await song.save();
+    res.status(201).json(newSong);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Routes pour les playlists
+app.get('/playlists', async (req, res) => {
+  try {
+    const playlists = await Playlist.find();
+    res.json(playlists);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/playlists', async (req, res) => {
+  const playlist = new Playlist({
+    name: req.body.name,
+    songs: req.body.songs
+  });
+  try {
+    const newPlaylist = await playlist.save();
+    res.status(201).json(newPlaylist);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Démarrer le serveur
+app.listen(PORT, () => {
+  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+});
